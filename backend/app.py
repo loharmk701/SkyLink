@@ -44,7 +44,7 @@ DB_PATH = Path(__file__).resolve().parent / "agrosmart.db"
 
 
 def init_database():
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH, timeout=30) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS sensor_readings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,7 +58,7 @@ def init_database():
 
 
 def save_sensor_to_database(soil_moisture, tank_level, pump_status):
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH, timeout=30) as conn:
         conn.execute(
             """
             INSERT INTO sensor_readings
@@ -89,7 +89,7 @@ def save_reading():
 
 @app.route("/api/history", methods=["GET"])
 def get_history():
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH, timeout=30) as conn:
         conn.row_factory = sqlite3.Row
 
         readings = conn.execute("""
@@ -121,7 +121,7 @@ def automatic_sensor_logging():
 
 @app.route("/api/export-csv", methods=["GET"])
 def export_csv():
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH, timeout=30) as conn:
         readings = conn.execute("""
             SELECT id, soil_moisture, tank_level,
                    pump_status, recorded_at
