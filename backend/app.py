@@ -12,7 +12,14 @@ from flask import Flask, jsonify, Response
 
 from flask_cors import CORS
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "http://localhost:5173",
+            "https://agrosmart-dashboard-1.onrender.com"
+        ]
+    }
+})
 @app.route("/")
 def home():
     return jsonify({
