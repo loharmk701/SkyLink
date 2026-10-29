@@ -39,7 +39,9 @@ def get_sensors():
     })
 
 
+
 DB_PATH = Path(__file__).resolve().parent / "agrosmart.db"
+
 
 def init_database():
     with sqlite3.connect(DB_PATH) as conn:
@@ -81,7 +83,7 @@ def save_reading():
     )
 
     return jsonify({
-        "message": "Sensor reading saved successfully!",
+        "message": "Sensdef init_database():or reading saved successfully!",
         "status": "success"
     })
 
