@@ -1,0 +1,25 @@
+
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/agrosmart.db
+backend/*.db-journal
+
+# AgroSmart Backend
+backend/agrosmart.db
+backend/*.db-journal
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment Files
+.env
+.env.*
+!.env.example
