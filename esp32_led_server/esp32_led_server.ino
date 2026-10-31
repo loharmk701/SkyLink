@@ -1,200 +1,121 @@
 /*
-  XIAO ESP32-S3 LED Web Controller
+  XIAO ESP32-S3 cloud LED client
 
-  Hardware:
-    LED/resistor positive leg -> D10
-    LED/resistor negative leg -> GND
+  LED wiring:
+    D10 -> resistor -> LED anode
+    GND -> LED cathode
 
-  XIAO ESP32-S3 mapping:
-    D10 = GPIO9
-
-  HTTP API:
-    GET  /health
-    GET  /led
-    POST /led
-
-  POST body expected by the AgroSmart dashboard:
-    {"on":true,"pin":"D10"}
-    {"on":false,"pin":"D10"}
+  D10 is GPIO9 on the XIAO ESP32-S3.
+  The ESP32 polls the Vercel API, so it does not need a public IP address.
 */
 
 #include <WiFi.h>
-#include <WebServer.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
-// --------------------------- Wi-Fi settings ---------------------------
+// ------------------------- required configuration ----------------------
 const char* WIFI_SSID = "YOUR_WIFI_NAME";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// Replace this with the actual public Render API service URL.
-// Local example: http://192.168.1.100:5000/api/led
+// Replace with your deployed Vercel project URL.
 const char* BACKEND_LED_URL =
-    "https://YOUR-BACKEND-SERVICE.onrender.com/api/led";
+    "https://your-project.vercel.app/api/led";
 
-// --------------------------- Hardware settings ------------------------
-const uint8_t LED_PIN = D10;
-
-// true: LED anode/resistor is connected to D10 and cathode to GND.
-// false: use this for an active-low LED or relay module.
+// Set false if your LED or relay is active-low.
 const bool LED_ACTIVE_HIGH = true;
 
-// --------------------------- Server settings --------------------------
-WebServer server(80);
-bool ledIsOn = false;
-unsigned long lastWifiAttempt = 0;
+// ------------------------- device configuration ------------------------
+const uint8_t LED_PIN = D10;
+const unsigned long POLL_INTERVAL_MS = 1000;
+const unsigned long WIFI_RETRY_INTERVAL_MS = 10000;
 
-const unsigned long WIFI_RECONNECT_INTERVAL_MS = 10000;
-const unsigned long BACKEND_POLL_INTERVAL_MS = 1000;
-unsigned long lastBackendPoll = 0;
+bool ledIsOn = false;
+unsigned long lastPoll = 0;
+unsigned long lastWiFiRetry = 0;
 
 void setLed(bool on) {
   ledIsOn = on;
-
   const bool outputLevel = LED_ACTIVE_HIGH ? on : !on;
   digitalWrite(LED_PIN, outputLevel ? HIGH : LOW);
 }
 
-String ledResponse() {
-  String response = "{\"on\":";
-  response += ledIsOn ? "true" : "false";
-  response += ",\"pin\":\"D10\"}";
-  return response;
-}
+bool parseLedState(const String& response, bool& state) {
+  const int onKey = response.indexOf("\"on\"");
+  if (onKey < 0) return false;
 
-void addCorsHeaders() {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
-  server.sendHeader("Cache-Control", "no-store");
-}
+  const int colon = response.indexOf(':', onKey + 4);
+  if (colon < 0) return false;
 
-void sendJson(int statusCode, const String& body) {
-  addCorsHeaders();
-  server.send(statusCode, "application/json", body);
-}
-
-bool readRequestedLedState(const String& body, bool& requestedState) {
-  int onKey = body.indexOf("\"on\"");
-  if (onKey < 0) {
-    return false;
-  }
-
-  int colon = body.indexOf(':', onKey + 4);
-  if (colon < 0) {
-    return false;
-  }
-
-  String value = body.substring(colon + 1);
+  String value = response.substring(colon + 1);
   value.trim();
 
   if (value.startsWith("true")) {
-    requestedState = true;
+    state = true;
     return true;
   }
 
   if (value.startsWith("false")) {
-    requestedState = false;
+    state = false;
     return true;
   }
 
   return false;
 }
 
-void syncLedFromBackendResponse(const String& body) {
+void applyBackendResponse(const String& response) {
   bool requestedState = false;
-  if (readRequestedLedState(body, requestedState)) {
-    setLed(requestedState);
-  }
-}
-
-void pollBackendLedState() {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!parseLedState(response, requestedState)) {
+    Serial.println("Invalid LED response from Vercel");
     return;
   }
 
-  const String backendUrl = BACKEND_LED_URL;
-  int httpCode = -1;
-  String responseBody;
+  if (requestedState != ledIsOn) {
+    setLed(requestedState);
+    Serial.printf("LED %s\n", ledIsOn ? "ON" : "OFF");
+  }
+}
 
-  if (backendUrl.startsWith("https://")) {
-    WiFiClientSecure secureClient;
-    secureClient.setInsecure();
+void pollBackend() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  int statusCode = -1;
+  String response;
+  const String url = BACKEND_LED_URL;
+
+  if (url.startsWith("https://")) {
+    WiFiClientSecure client;
+    client.setInsecure();
 
     HTTPClient http;
-    if (!http.begin(secureClient, backendUrl)) {
-      return;
-    }
-
-    httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      responseBody = http.getString();
-    }
+    if (!http.begin(client, url)) return;
+    statusCode = http.GET();
+    if (statusCode == HTTP_CODE_OK) response = http.getString();
     http.end();
   } else {
     WiFiClient client;
     HTTPClient http;
-    if (!http.begin(client, backendUrl)) {
-      return;
-    }
-
-    httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      responseBody = http.getString();
-    }
+    if (!http.begin(client, url)) return;
+    statusCode = http.GET();
+    if (statusCode == HTTP_CODE_OK) response = http.getString();
     http.end();
   }
 
-  if (httpCode == HTTP_CODE_OK) {
-    syncLedFromBackendResponse(responseBody);
+  if (statusCode == HTTP_CODE_OK) {
+    applyBackendResponse(response);
   } else {
-    Serial.printf("Backend LED request failed: %d\n", httpCode);
+    Serial.printf("Vercel request failed: %d\n", statusCode);
   }
 }
 
-void handleRoot() {
-  sendJson(200, "{\"device\":\"XIAO ESP32-S3\",\"service\":\"LED controller\"}");
-}
-
-void handleHealth() {
-  sendJson(200, "{\"status\":\"ok\",\"device\":\"XIAO ESP32-S3\"}");
-}
-
-void handleLedGet() {
-  sendJson(200, ledResponse());
-}
-
-void handleLedPost() {
-  bool requestedState = false;
-  const String requestBody = server.arg("plain");
-
-  if (!readRequestedLedState(requestBody, requestedState)) {
-    sendJson(400, "{\"error\":\"Expected JSON with boolean on value\"}");
-    return;
-  }
-
-  setLed(requestedState);
-  Serial.printf("LED %s | request: %s\n", ledIsOn ? "ON" : "OFF", requestBody.c_str());
-  sendJson(200, ledResponse());
-}
-
-void handleOptions() {
-  addCorsHeaders();
-  server.send(204);
-}
-
-void handleNotFound() {
-  sendJson(404, "{\"error\":\"Route not found\"}");
-}
-
-void connectToWiFi() {
-  Serial.printf("Connecting to Wi-Fi: %s\n", WIFI_SSID);
+void connectWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  const unsigned long startTime = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startTime < 20000) {
+  Serial.print("Connecting to Wi-Fi");
+  const unsigned long start = millis();
+
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 20000) {
     delay(250);
     Serial.print('.');
   }
@@ -202,21 +123,11 @@ void connectToWiFi() {
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("Wi-Fi connected");
-    Serial.print("ESP32 IP address: http://");
+    Serial.print("Wi-Fi connected: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("Wi-Fi connection timed out; retrying in the background");
+    Serial.println("Wi-Fi connection timed out");
   }
-}
-
-void setupRoutes() {
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/health", HTTP_GET, handleHealth);
-  server.on("/led", HTTP_GET, handleLedGet);
-  server.on("/led", HTTP_POST, handleLedPost);
-  server.on("/led", HTTP_OPTIONS, handleOptions);
-  server.onNotFound(handleNotFound);
 }
 
 void setup() {
@@ -225,29 +136,22 @@ void setup() {
 
   pinMode(LED_PIN, OUTPUT);
   setLed(false);
+  connectWiFi();
 
-  connectToWiFi();
-  setupRoutes();
-  server.begin();
-
-  Serial.println("LED HTTP server started on port 80");
-  Serial.println("GET  /led  -> LED status");
-  Serial.println("POST /led  -> {\"on\":true} or {\"on\":false}");
+  Serial.println("Vercel LED client ready");
 }
 
 void loop() {
-  server.handleClient();
-
-  if (millis() - lastBackendPoll >= BACKEND_POLL_INTERVAL_MS) {
-    lastBackendPoll = millis();
-    pollBackendLedState();
-  }
-
   if (WiFi.status() != WL_CONNECTED &&
-      millis() - lastWifiAttempt >= WIFI_RECONNECT_INTERVAL_MS) {
-    lastWifiAttempt = millis();
-    Serial.println("Wi-Fi disconnected; reconnecting...");
+      millis() - lastWiFiRetry >= WIFI_RETRY_INTERVAL_MS) {
+    lastWiFiRetry = millis();
+    Serial.println("Reconnecting Wi-Fi...");
     WiFi.disconnect();
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  }
+
+  if (millis() - lastPoll >= POLL_INTERVAL_MS) {
+    lastPoll = millis();
+    pollBackend();
   }
 }
