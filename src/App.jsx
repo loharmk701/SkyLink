@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./config";
+              import { API_BASE_URL } from "./config";
 import { useState, useEffect, useRef } from "react";
 
 import {
@@ -11,6 +11,14 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
+
+import {
+  Sprout, LayoutDashboard, Activity, ChartNoAxesCombined, Droplets,
+  Settings, Info, CircleCheck, CircleAlert, Wifi, WifiOff,
+  Database, Download, Server, Monitor, Link2, Timer, Cpu,
+  Waves, Zap, Bot, SlidersHorizontal, Bell, FlaskConical,
+  Clock3, ShieldCheck, CodeXml, Cloud, Power
+} from "lucide-react";
 
 import "./App.css";
 
@@ -294,48 +302,49 @@ const systemHealth =
   return (
     <div className="dashboard">
       <aside className="sidebar">
-        <h2>🌱 AgroSmart</h2>
+        <h2><Sprout size={22} style={{ verticalAlign: "middle", marginRight: 8 }} /> AgroSmart</h2>
         <p>IoT Irrigation System</p>
-        <nav>
-          <div className="active">▦ Dashboard</div>
-          <div>◉ Live Monitoring</div>
-          <div>▥ Analytics</div>
-          <div>♧ Irrigation</div>
-          <div>⚙ Settings</div>
+        <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <a style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }} className="active" href="#dashboard-overview"><LayoutDashboard size={17} /> Dashboard</a>
+          <a style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }} href="#live-monitoring"><Activity size={17} /> Live Monitoring</a>
+          <a style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }} href="#analytics"><ChartNoAxesCombined size={17} /> Analytics</a>
+          <a style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }} href="#irrigation"><Droplets size={17} /> Irrigation</a>
+          <a style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }} href="#sensor-source"><Settings size={17} /> Data Source</a>
+          <a style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }} href="#about-project"><Info size={17} /> About</a>
         </nav>
-        <div className="sidebar-bottom">● Demo Mode</div>
+        <div className="sidebar-bottom"><CircleCheck size={14} /> Demo Mode</div>
       </aside>
 
-      <main className="main">
+      <main className="main" id="dashboard-overview">
         <header>
           <div>
             <h1>Smart Irrigation Dashboard</h1>
             <p>Monitor and manage your irrigation system</p>
           </div>
-          <span className="status">● System Online (Demo)</span>
+          <span className="status"><CircleCheck size={14} /> System Online (Demo)</span>
         </header>
 
         <div className="welcome">
-          <h2>Welcome to AgroSmart 🌿</h2>
+          <h2>Welcome to AgroSmart</h2>
           <p>Intelligent water management for smarter farming.</p>
         </div>
 
-<div className="card">
-  <h3>🌐 Sensor Data Source</h3>
+<div className="card" id="sensor-source">
+  <h3><Database size={19} /> Sensor Data Source</h3>
 
   <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
     <button
       onClick={() => setDataSource("simulator")}
       className={dataSource === "simulator" ? "active" : ""}
     >
-      🎛️ Demo Simulator
+      <SlidersHorizontal size={16} /> Demo Simulator
     </button>
 
     <button
       onClick={() => setDataSource("backend")}
       className={dataSource === "backend" ? "active" : ""}
     >
-      🔗 Flask Backend
+      <Link2 size={16} /> Flask Backend
     </button>
   </div>
 
@@ -356,7 +365,7 @@ const systemHealth =
     }}
   >
     <h3 style={{ color: "#ef4444" }}>
-      ⚠️ Backend Offline
+      <CircleAlert size={18} /> Backend Offline
     </h3>
     <p>
       Flask Backend is not connected.
@@ -366,7 +375,7 @@ const systemHealth =
 )}
 
 <section className="card" style={{ marginBottom: "20px" }}>
-  <h3>📊 Sensor Reading History</h3>
+  <h3><Database size={19} /> Sensor Reading History</h3>
   
 <a
   href={`${API_BASE_URL}/api/export-csv`}
@@ -383,7 +392,7 @@ const systemHealth =
     fontWeight: "bold"
   }}
 >
-  📥 Download CSV Report
+  <Download size={16} /> Download CSV Report
 </a>
 
   <p>Last 20 readings saved in SQLite Database</p>
@@ -422,7 +431,7 @@ const systemHealth =
 </section>
 
 <section className="card" style={{ marginBottom: "20px" }}>
-  <h3>📈 Historical Sensor Analytics</h3>
+  <h3><ChartNoAxesCombined size={19} /> Historical Sensor Analytics</h3>
   <p>Last 20 sensor readings from SQLite Database</p>
 
   <div style={{ width: "100%", height: "300px", marginTop: "20px" }}>
@@ -477,7 +486,7 @@ const systemHealth =
   }}
 >
   <div>
-    <strong>🌱 AgroSmart Monitoring System</strong>
+    <strong><Sprout size={22} style={{ verticalAlign: "middle", marginRight: 8 }} /> AgroSmart Monitoring System</strong>
     <div style={{ fontSize: "12px", color: "#94a3b8" }}>
       Software Demo v1.0 | React + Flask + SQLite
     </div>
@@ -490,15 +499,15 @@ const systemHealth =
     }}
   >
     {backendStatus === "Connected"
-      ? "● Backend Online"
-      : "● Backend Offline"}
+      ? "Backend Online"
+      : "Backend Offline"}
   </span>
 </div>
 
-        <section className="cards">
+        <section className="cards" id="live-monitoring">
         
 <div className="card">
-  <div className="card-icon">🖥️</div>
+  <div className="card-icon"><Monitor size={24} /></div>
   <p>System Health</p>
 
   <h2>{systemHealth}</h2>
@@ -511,15 +520,15 @@ const systemHealth =
     }
   >
     {backendStatus === "Connected"
-      ? "● Online"
-      : "● Offline"}
+      ? "Online"
+      : "Offline"}
   </span>
 
   <small>Flask Backend Connection Status</small>
 </div>
 
 <div className="card">
-  <div className="card-icon">🔗</div>
+  <div className="card-icon"><Link2 size={24} /></div>
   <p>Flask Backend API</p>
 
   <h2>{backendStatus}</h2>
@@ -550,7 +559,7 @@ const systemHealth =
 </div>
 
 <div className="card">
-  <div className="card-icon">⏱️</div>
+  <div className="card-icon"><Timer size={24} /></div>
   <p>Total Pump Runtime</p>
 
   <h2>
@@ -567,7 +576,7 @@ const systemHealth =
 
         
 <div className="card">
-  <div className="card-icon">📡</div>
+  <div className="card-icon"><Wifi size={24} /></div>
   <p>ESP32 Device Status</p>
 
   <h2>{deviceConnected ? "ONLINE" : "OFFLINE"}</h2>
@@ -583,13 +592,13 @@ const systemHealth =
   </small>
   
 <small>
-  🕒 Last Demo Update: {lastUpdated || "Waiting..."}
+  Last Demo Update: {lastUpdated || "Waiting..."}
 </small>
 
 </div>
 
           <div className="card">
-            <div className="card-icon">💧</div>
+            <div className="card-icon"><Droplets size={24} /></div>
             <p>Soil Moisture</p>
             <h2>
 
@@ -603,7 +612,7 @@ const systemHealth =
           </div>
 
           <div className="card">
-            <div className="card-icon">🌊</div>
+            <div className="card-icon"><Waves size={24} /></div>
             <p>Water Tank Level</p>
             <h2>
 
@@ -617,7 +626,7 @@ const systemHealth =
           </div>
 
           <div className="card">
-            <div className="card-icon">⚡</div>
+            <div className="card-icon"><Zap size={24} /></div>
             <p>Water Pump</p>
             <h2>{pump ? "ON" : "OFF"}</h2>
             <span className={pump ? "tag green" : "tag"}>
@@ -626,16 +635,16 @@ const systemHealth =
           </div>
 
           <div className="card">
-            <div className="card-icon">🤖</div>
+            <div className="card-icon"><Bot size={24} /></div>
             <p>Irrigation Mode</p>
             <h2>{autoMode ? "AUTO" : "MANUAL"}</h2>
             <span className="tag green">Demo System</span>
           </div>
         </section>
 
-        <section className="panels">
+        <section className="panels" id="irrigation">
           <div className="panel">
-            <h3>🎛 Irrigation Control</h3>
+            <h3><SlidersHorizontal size={19} /> Irrigation Control</h3>
             <p>Choose the operating mode</p>
 
             <div className="buttons">
@@ -667,21 +676,21 @@ const systemHealth =
           </div>
 
           <div className="panel">
-            <h3>🔔 Smart Alerts</h3>
+            <h3><Bell size={19} /> Smart Alerts</h3>
             {safetyAlert && (
-  <div className="alert">⚠ {safetyAlert}</div>
+  <div className="alert"><CircleAlert size={16} /> {safetyAlert}</div>
 )}
-            {drySoil && <div className="alert">⚠ Soil moisture is low!</div>}
-            {lowWater && <div className="alert">⚠ Water tank is low!</div>}
+            {drySoil && <div className="alert"><CircleAlert size={16} /> Soil moisture is low!</div>}
+            {lowWater && <div className="alert"><CircleAlert size={16} /> Water tank is low!</div>}
             {!drySoil && !lowWater && (
-              <div className="success">✓ All sensor levels are normal</div>
+              <div className="success"><CircleCheck size={16} /> All sensor levels are normal</div>
             )}
             <p className="hint">Alerts update with demo sensor values.</p>
           </div>
         </section>
 
         <section className="panel simulator">
-          <h3>🧪 Sensor Simulator</h3>
+          <h3><FlaskConical size={19} /> Sensor Simulator</h3>
           <p>Test the dashboard before ESP32 arrives.</p>
 
           <label>Soil Moisture: {moisture}%</label>
@@ -704,7 +713,7 @@ const systemHealth =
         </section>
 
 <section className="panel watering-history">
-  <h3>💧 Watering Activity History</h3>
+  <h3><Droplets size={19} /> Watering Activity History</h3>
   <p>Recent pump activity and irrigation events</p>
 
   <div className="history-scroll">
@@ -745,10 +754,38 @@ const systemHealth =
   </div>
 </section>
 
+
+<section className="panel" id="about-project" style={{ marginTop: 24, marginBottom: 24 }}>
+  <h3><Info size={20} /> About AgroSmart</h3>
+  <p>AgroSmart is an IoT-based Smart Irrigation System prototype designed to support efficient water usage through soil moisture monitoring, tank level monitoring and intelligent irrigation control.</p>
+  <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 18 }}>
+    <div className="card">
+      <h3><ShieldCheck size={18} /> Key Features</h3>
+      <p>Sensor monitoring, automatic/manual demo controls, low-water safety alerts, pump timeout simulation, history, analytics and CSV export.</p>
+    </div>
+    <div className="card">
+      <h3><Server size={18} /> Software Stack</h3>
+      <p>React, Vite, JavaScript, Python Flask, SQLite, CodeXml and Render cloud hosting.</p>
+    </div>
+    <div className="card">
+      <h3><Cpu size={18} /> Hardware Plan</h3>
+      <p>ESP32, soil moisture sensor, water-level sensing, relay module and water pump. Physical hardware integration is pending.</p>
+    </div>
+    <div className="card">
+      <h3><Info size={18} /> Project Details</h3>
+      <p><strong>Project:</strong> AgroSmart — Smart Irrigation System</p>
+      <p><strong>Type:</strong> Diploma ICT Minor Project</p>
+      <p><strong>Dashboard Development:</strong> Heliba Jadeja</p>
+      <p><strong>Project Team:</strong> Group project (team names can be added here)</p>
+      <p><strong>Current Status:</strong> Online software demo; real ESP32 integration pending</p>
+    </div>
+  </div>
+</section>
+
         <footer>
           
-<section className="panel analytics">
-  <h3>📈 Real-Time Sensor Analytics</h3>
+<section className="panel analytics" id="analytics">
+  <h3><ChartNoAxesCombined size={19} /> Real-Time Sensor Analytics</h3>
   <p>Live soil moisture and water tank monitoring</p>
 
   <div style={{ width: "100%", height: 320 }}>
