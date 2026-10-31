@@ -5,9 +5,6 @@ import sqlite3
 import os
 import threading
 import time
-import json
-from urllib.error import URLError, HTTPError
-from urllib.request import Request, urlopen
 
 from pathlib import Path
 
@@ -27,13 +24,14 @@ CORS(app, resources={r"/api/*": {"origins": _cors_origins()}})
 
 
 DB_PATH = Path(os.getenv("DATABASE_PATH", Path(__file__).resolve().parent / "agrosmart.db"))
-ESP32_DEVICE_URL = os.getenv("ESP32_DEVICE_URL", "").strip()
 led_state = False
 
 
 @app.get("/health")
 def health():
     return jsonify({"status": "ok", "service": "agrosmart-api"})
+
+
 @app.route("/")
 def home():
     return jsonify({
@@ -58,29 +56,14 @@ def led_control():
     global led_state
 
     if request.method == "GET":
-        return jsonify({"on": led_state, "pin": "D0"})
+        return jsonify({"on": led_state, "pin": "D10"})
 
     payload = request.get_json(silent=True) or {}
     if not isinstance(payload.get("on"), bool):
         return jsonify({"error": "The 'on' value must be boolean."}), 400
 
-    desired_state = payload["on"]
-    if ESP32_DEVICE_URL:
-        try:
-            command = Request(
-                ESP32_DEVICE_URL,
-                data=json.dumps({"on": desired_state, "pin": "D0"}).encode(),
-                headers={"Content-Type": "application/json"},
-                method="POST",
-            )
-            with urlopen(command, timeout=5) as response:
-                if response.status >= 400:
-                    raise RuntimeError("ESP32 rejected the command")
-        except (HTTPError, URLError, TimeoutError, RuntimeError) as error:
-            return jsonify({"error": f"ESP32 command failed: {error}"}), 502
-
-    led_state = desired_state
-    return jsonify({"on": led_state, "pin": "D0"})
+    led_state = payload["on"]
+    return jsonify({"on": led_state, "pin": "D10"})
 
 
 
@@ -201,7 +184,6 @@ def export_csv():
 
 if __name__ == "__main__":
     init_database()
-
     logging_thread = threading.Thread(
         target=automatic_sensor_logging,
         daemon=True
@@ -214,9 +196,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.getenv("PORT", "5000")),
     )
-
-
-# Gunicorn imports the application instead of executing this module as a script.
-# Initialize the SQLite schema for both local and hosted execution.
-init_database()
 

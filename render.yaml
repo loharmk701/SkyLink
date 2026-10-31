@@ -8,7 +8,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: CORS_ORIGINS
-        value: https://agrosmart-dashboard.onrender.com
+        value: https://agrosmart-dashboard-9vci.onrender.com
       - key: DATABASE_PATH
         value: /opt/render/project/src/backend/agrosmart.db
 
@@ -18,8 +18,11 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
-      - key: VITE_API_BASE_URL
-        value: https://agrosmart-api.onrender.com
+      - key: VITE_API_HOST
+        fromService:
+          type: web
+          name: agrosmart-api
+          property: host
     routes:
       - type: rewrite
         source: /*

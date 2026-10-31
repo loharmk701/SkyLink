@@ -14,10 +14,10 @@ import {
 
 import {
   Sprout, LayoutDashboard, Activity, ChartNoAxesCombined, Droplets,
-  Settings, Info, CircleCheck, CircleAlert, Wifi, WifiOff,
+  Settings, Info, CircleCheck, CircleAlert, Wifi,
   Database, Download, Server, Monitor, Link2, Timer, Cpu,
   Waves, Zap, Bot, SlidersHorizontal, Bell, FlaskConical,
-  Clock3, ShieldCheck, CodeXml, Cloud, Power, Lightbulb
+  ShieldCheck, Power, Lightbulb
 } from "lucide-react";
 
 import "./App.css";
@@ -40,7 +40,6 @@ const [dataSource, setDataSource] = useState("simulator");
   const [autoMode, setAutoMode] = useState(true);
   const [pump, setPump] = useState(false);
   const [deviceConnected, setDeviceConnected] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(null);
   const [ledOn, setLedOn] = useState(false);
   const [ledBusy, setLedBusy] = useState(false);
   
@@ -69,6 +68,7 @@ const [wateringHistory, setWateringHistory] = useState(() => {
 const pumpStartedAt = useRef(null);
 const timeoutLocked = useRef(false);
 const hasPumpChanged = useRef(false);
+const previousPump = useRef(null);
 
   
 const [history, setHistory] = useState([
@@ -79,6 +79,8 @@ const [history, setHistory] = useState([
   { time: "5", moisture: 38, tank: 76 }
 ]);
 
+/* This effect enforces the automatic irrigation safety rules. */
+/* eslint-disable react-hooks/set-state-in-effect */
 useEffect(() => {
   const interval = setInterval(() => {
     setHistory((previous) => [
@@ -119,6 +121,7 @@ useEffect(() => {
     setPump(true);
   }
 }, [moisture, tank, autoMode]);
+/* eslint-enable react-hooks/set-state-in-effect */
 
 useEffect(() => {
   if (!pump) {
@@ -140,6 +143,9 @@ useEffect(() => {
 
 
 useEffect(() => {
+  if (previousPump.current === pump) return;
+  previousPump.current = pump;
+
   if (!hasPumpChanged.current) {
     hasPumpChanged.current = true;
     return;
@@ -162,7 +168,7 @@ id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
 
     return [event, ...previous].slice(0, 20);
   });
-}, [pump]);
+}, [pump, autoMode, moisture]);
 
 
 
@@ -172,10 +178,6 @@ useEffect(() => {
     JSON.stringify(wateringHistory)
   );
 }, [wateringHistory]);
-
-useEffect(() => {
-  setLastUpdated(new Date().toLocaleTimeString());
-}, [moisture, tank]);
 
 useEffect(() => {
   if (!pump) return;
@@ -207,6 +209,7 @@ useEffect(() => {
       .then((data) => {
         setBackendSensorData(data);
         setBackendStatus("Connected");
+        setDeviceConnected(Boolean(data.device_connected));
         
 setBackendLastUpdated(new Date().toLocaleTimeString());
 
@@ -215,7 +218,8 @@ setBackendLastUpdated(new Date().toLocaleTimeString());
         console.error("Backend connection error:", error);
         setBackendStatus("Disconnected");
         
-setBackendSensorData(null);
+        setBackendSensorData(null);
+        setDeviceConnected(false);
 
       });
   };
@@ -307,7 +311,7 @@ const systemHealth =
       const response = await fetch(`${API_BASE_URL}/api/led`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ on: nextState, pin: "D0" })
+        body: JSON.stringify({ on: nextState, pin: "D10" })
       });
 
       if (!response.ok) throw new Error("LED command failed");
@@ -366,7 +370,7 @@ const systemHealth =
           <div className="led-control-icon"><Lightbulb size={28} /></div>
           <div className="led-control-copy">
             <h3>ESP32 LED</h3>
-            <p>XIAO ESP32-S3 · D0</p>
+            <p>XIAO ESP32-S3 · D10</p>
           </div>
           <span className={`led-state ${ledOn ? "on" : ""}`}>
             {ledOn ? "ON" : "OFF"}
@@ -645,7 +649,7 @@ const systemHealth =
   </small>
   
 <small>
-  Last Demo Update: {lastUpdated || "Waiting..."}
+  Last Demo Update: {backendLastUpdated || "Waiting..."}
 </small>
 
 </div>

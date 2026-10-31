@@ -2,11 +2,11 @@
   XIAO ESP32-S3 LED Web Controller
 
   Hardware:
-    LED/resistor positive leg -> D0
+    LED/resistor positive leg -> D10
     LED/resistor negative leg -> GND
 
   XIAO ESP32-S3 mapping:
-    D0 = GPIO1
+    D10 = GPIO9
 
   HTTP API:
     GET  /health
@@ -14,8 +14,8 @@
     POST /led
 
   POST body expected by the AgroSmart dashboard:
-    {"on":true,"pin":"D0"}
-    {"on":false,"pin":"D0"}
+    {"on":true,"pin":"D10"}
+    {"on":false,"pin":"D10"}
 */
 
 #include <WiFi.h>
@@ -27,14 +27,15 @@
 const char* WIFI_SSID = "YOUR_WIFI_NAME";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// Public Render backend URL used by the webpage.
-// Replace this with your real API service URL.
-const char* BACKEND_LED_URL = "https://agrosmart-api.onrender.com/api/led";
+// Replace this with the actual public Render API service URL.
+// Local example: http://192.168.1.100:5000/api/led
+const char* BACKEND_LED_URL =
+    "https://YOUR-BACKEND-SERVICE.onrender.com/api/led";
 
 // --------------------------- Hardware settings ------------------------
-const uint8_t LED_PIN = D0;
+const uint8_t LED_PIN = D10;
 
-// true: LED anode/resistor is connected to D0 and cathode to GND.
+// true: LED anode/resistor is connected to D10 and cathode to GND.
 // false: use this for an active-low LED or relay module.
 const bool LED_ACTIVE_HIGH = true;
 
@@ -57,7 +58,7 @@ void setLed(bool on) {
 String ledResponse() {
   String response = "{\"on\":";
   response += ledIsOn ? "true" : "false";
-  response += ",\"pin\":\"D0\"}";
+  response += ",\"pin\":\"D10\"}";
   return response;
 }
 

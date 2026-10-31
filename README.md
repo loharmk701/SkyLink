@@ -38,4 +38,6 @@ SQLite storage on Render is ephemeral unless a persistent disk is attached. This
 
 ## ESP32 LED proxy
 
-The dashboard controls the XIAO ESP32-S3 LED on pin `D0` through `POST /api/led`. To connect a hosted API to the device, set the API service environment variable `ESP32_DEVICE_URL` to an HTTPS endpoint reachable by the ESP32 network. The endpoint receives `{ "on": true|false, "pin": "D0" }`. Without this variable, the API runs in local/demo mode.
+The dashboard controls an LED connected to XIAO ESP32-S3 pin `D10` through `POST /api/led`. The ESP32 polls `GET /api/led`, so it does not need to be on the same network as Render and the device does not need a public IP. Set the backend URL in `esp32_led_server/esp32_led_server.ino` before uploading. The endpoint returns `{ "on": true|false, "pin": "D10" }`.
+
+For local development, use `http://127.0.0.1:5000` in `.env` and replace it with the actual Render API service URL in the firmware for hosted operation. `.env` is intentionally ignored by Git; use `.env.example` as the template.
