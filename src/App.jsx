@@ -17,7 +17,7 @@ import {
   Settings, Info, CircleCheck, CircleAlert, Wifi, WifiOff,
   Database, Download, Server, Monitor, Link2, Timer, Cpu,
   Waves, Zap, Bot, SlidersHorizontal, Bell, FlaskConical,
-  Clock3, ShieldCheck, CodeXml, Cloud, Power
+  Clock3, ShieldCheck, CodeXml, Cloud, Power, Lightbulb
 } from "lucide-react";
 
 import "./App.css";
@@ -41,6 +41,8 @@ const [dataSource, setDataSource] = useState("simulator");
   const [pump, setPump] = useState(false);
   const [deviceConnected, setDeviceConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [ledOn, setLedOn] = useState(false);
+  const [ledBusy, setLedBusy] = useState(false);
   
 const [totalPumpSeconds, setTotalPumpSeconds] = useState(() => {
   try {
@@ -287,6 +289,37 @@ const systemHealth =
   const drySoil = moisture < 30;
   const lowWater = tank < 15;
 
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/led`)
+      .then((response) => {
+        if (!response.ok) throw new Error("LED status unavailable");
+        return response.json();
+      })
+      .then((data) => setLedOn(Boolean(data.on)))
+      .catch(() => {});
+  }, []);
+
+  async function toggleLed() {
+    const nextState = !ledOn;
+    setLedBusy(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/led`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ on: nextState, pin: "D0" })
+      });
+
+      if (!response.ok) throw new Error("LED command failed");
+      const data = await response.json();
+      setLedOn(Boolean(data.on));
+    } catch (error) {
+      console.error("LED command error:", error);
+    } finally {
+      setLedBusy(false);
+    }
+  }
+
   function togglePump() {
     if (autoMode) {
       alert("Switch to Manual Mode first.");
@@ -328,6 +361,26 @@ const systemHealth =
           <h2>Welcome to AgroSmart</h2>
           <p>Intelligent water management for smarter farming.</p>
         </div>
+
+        <section className={`led-control card ${ledOn ? "led-active" : ""}`}>
+          <div className="led-control-icon"><Lightbulb size={28} /></div>
+          <div className="led-control-copy">
+            <h3>ESP32 LED</h3>
+            <p>XIAO ESP32-S3 · D0</p>
+          </div>
+          <span className={`led-state ${ledOn ? "on" : ""}`}>
+            {ledOn ? "ON" : "OFF"}
+          </span>
+          <button
+            className={`led-toggle ${ledOn ? "on" : ""}`}
+            onClick={toggleLed}
+            disabled={ledBusy}
+            aria-label={ledOn ? "Turn LED off" : "Turn LED on"}
+          >
+            <Power size={17} />
+            {ledBusy ? "Updating" : ledOn ? "Turn off" : "Turn on"}
+          </button>
+        </section>
 
 <div className="card" id="sensor-source">
   <h3><Database size={19} /> Sensor Data Source</h3>

@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 /backend/agrosmart.db
+.env
+.venv/
+backend/.venv/
+*.py[cod]
+__pycache__/

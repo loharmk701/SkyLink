@@ -1,16 +1,41 @@
-# React + Vite
+# AgroSmart Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AgroSmart is a React/Vite dashboard with a Flask API and SQLite demo data store.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Backend
 
-## React Compiler
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
+python backend/app.py
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The API runs on `http://127.0.0.1:5000`.
 
-## Expanding the ESLint configuration
+### Frontend
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Install Node.js 20 or newer, then run:
+
+```powershell
+npm ci
+npm run dev
+```
+
+Copy `.env.example` to `.env.local` if the API uses a non-default URL.
+
+## Render deployment
+
+The root `render.yaml` defines two services:
+
+- `agrosmart-api`: Python web service running Gunicorn and exposing `/health`.
+- `agrosmart-dashboard`: static Vite site that uses `VITE_API_BASE_URL` to reach the API.
+
+In Render, create a Blueprint from this repository and review the generated service URLs. If Render assigns different URLs than the defaults in `render.yaml`, update `VITE_API_BASE_URL` on the frontend and `CORS_ORIGINS` on the API to match them.
+
+SQLite storage on Render is ephemeral unless a persistent disk is attached. This is acceptable for the demo; use a managed database for production sensor history.
+
+## ESP32 LED proxy
+
+The dashboard controls the XIAO ESP32-S3 LED on pin `D0` through `POST /api/led`. To connect a hosted API to the device, set the API service environment variable `ESP32_DEVICE_URL` to an HTTPS endpoint reachable by the ESP32 network. The endpoint receives `{ "on": true|false, "pin": "D0" }`. Without this variable, the API runs in local/demo mode.

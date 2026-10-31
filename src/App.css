@@ -344,3 +344,67 @@ footer {
   font-weight: 600;
   font-size: 12px;
 }
+
+/* ESP32 LED control */
+.led-control {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
+  border-color: #334155;
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.led-control.led-active {
+  border-color: #4ade80;
+  box-shadow: 0 0 24px rgba(74, 222, 128, .12);
+}
+
+.led-control-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  color: #94a3b8;
+  background: #263449;
+  transition: color .25s ease, background .25s ease, box-shadow .25s ease;
+}
+
+.led-active .led-control-icon {
+  color: #bbf7d0;
+  background: #166534;
+  box-shadow: 0 0 22px rgba(74, 222, 128, .45);
+}
+
+.led-control-copy { flex: 1; min-width: 0; }
+.led-control-copy h3 { margin: 0 0 4px; }
+.led-control-copy p { margin: 0; color: #94a3b8; font-size: 12px; }
+
+.led-state {
+  color: #94a3b8;
+  font: 600 12px ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+
+.led-state.on { color: #86efac; }
+
+.led-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 105px;
+  justify-content: center;
+  padding: 10px 14px;
+  background: #334155;
+}
+
+.led-toggle.on { background: #16a34a; }
+.led-toggle:disabled { cursor: wait; opacity: .65; }
+
+@media (max-width: 560px) {
+  .led-control { flex-wrap: wrap; }
+  .led-control-copy { flex: 1 1 calc(100% - 70px); }
+  .led-state { margin-left: 63px; }
+  .led-toggle { margin-left: auto; }
+}

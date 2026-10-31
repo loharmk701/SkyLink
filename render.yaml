@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: agrosmart-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers 1 --threads 2 --timeout 0 --bind 0.0.0.0:$PORT wsgi:app
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://agrosmart-dashboard.onrender.com
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/backend/agrosmart.db
+
+  - type: web
+    name: agrosmart-dashboard
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://agrosmart-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -2,24 +2,38 @@ import csv
 import io
 import sqlite3
 
+import os
 import threading
 import time
+import json
+from urllib.error import URLError, HTTPError
+from urllib.request import Request, urlopen
 
 from pathlib import Path
 
 
-from flask import Flask, jsonify, Response
+from flask import Flask, jsonify, Response, request
 
 from flask_cors import CORS
 app = Flask(__name__)
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "http://localhost:5173",
-            "https://agrosmart-dashboard-1.onrender.com"
-        ]
-    }
-})
+
+
+def _cors_origins():
+    configured = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+    return [origin.strip() for origin in configured.split(",") if origin.strip()]
+
+
+CORS(app, resources={r"/api/*": {"origins": _cors_origins()}})
+
+
+DB_PATH = Path(os.getenv("DATABASE_PATH", Path(__file__).resolve().parent / "agrosmart.db"))
+ESP32_DEVICE_URL = os.getenv("ESP32_DEVICE_URL", "").strip()
+led_state = False
+
+
+@app.get("/health")
+def health():
+    return jsonify({"status": "ok", "service": "agrosmart-api"})
 @app.route("/")
 def home():
     return jsonify({
@@ -39,8 +53,35 @@ def get_sensors():
     })
 
 
+@app.route("/api/led", methods=["GET", "POST"])
+def led_control():
+    global led_state
 
-DB_PATH = Path(__file__).resolve().parent / "agrosmart.db"
+    if request.method == "GET":
+        return jsonify({"on": led_state, "pin": "D0"})
+
+    payload = request.get_json(silent=True) or {}
+    if not isinstance(payload.get("on"), bool):
+        return jsonify({"error": "The 'on' value must be boolean."}), 400
+
+    desired_state = payload["on"]
+    if ESP32_DEVICE_URL:
+        try:
+            command = Request(
+                ESP32_DEVICE_URL,
+                data=json.dumps({"on": desired_state, "pin": "D0"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urlopen(command, timeout=5) as response:
+                if response.status >= 400:
+                    raise RuntimeError("ESP32 rejected the command")
+        except (HTTPError, URLError, TimeoutError, RuntimeError) as error:
+            return jsonify({"error": f"ESP32 command failed: {error}"}), 502
+
+    led_state = desired_state
+    return jsonify({"on": led_state, "pin": "D0"})
+
 
 
 def init_database():
@@ -83,7 +124,7 @@ def save_reading():
     )
 
     return jsonify({
-        "message": "Sensdef init_database():or reading saved successfully!",
+        "message": "Sensor reading saved successfully!",
         "status": "success"
     })
 
@@ -167,5 +208,15 @@ if __name__ == "__main__":
     )
     logging_thread.start()
 
-    app.run(debug=True, use_reloader=False, port=5000)
+    app.run(
+        debug=False,
+        use_reloader=False,
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "5000")),
+    )
+
+
+# Gunicorn imports the application instead of executing this module as a script.
+# Initialize the SQLite schema for both local and hosted execution.
+init_database()
 
