@@ -1,3 +1,5 @@
+# SkyLink: Multi-Camera Wireless Image Streaming over ESP-NOW
+### ESP32-CAM nodes → XIAO ESP32-S3 hub → PC
 # ESP-NOW Multi-Camera Wireless Photo Link (ESP32-CAM → XIAO ESP32-S3)
 
 A **router-free, long-lived wireless imaging link**: up to **3 ESP32-CAM nodes** capture JPEG frames and stream them over **ESP-NOW** (peer-to-peer 2.4 GHz, no Wi-Fi AP, no internet) to a single **Seeed XIAO ESP32-S3** hub. The hub reassembles the chunked JPEGs in PSRAM and forwards them to a PC over **USB-CDC serial** using a tiny framed protocol.
