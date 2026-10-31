@@ -755,32 +755,77 @@ const systemHealth =
 </section>
 
 
+
 <section className="panel" id="about-project" style={{ marginTop: 24, marginBottom: 24 }}>
   <h3><Info size={20} /> About AgroSmart</h3>
-  <p>AgroSmart is an IoT-based Smart Irrigation System prototype designed to support efficient water usage through soil moisture monitoring, tank level monitoring and intelligent irrigation control.</p>
-  <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 18 }}>
+
+  <p>
+    AgroSmart is an IoT-based Smart Irrigation System designed
+    to monitor soil moisture, water tank levels and support
+    intelligent irrigation control.
+  </p>
+
+  <div
+    className="about-grid"
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 16,
+      marginTop: 18
+    }}
+  >
     <div className="card">
       <h3><ShieldCheck size={18} /> Key Features</h3>
-      <p>Sensor monitoring, automatic/manual demo controls, low-water safety alerts, pump timeout simulation, history, analytics and CSV export.</p>
+      <p>
+        Sensor monitoring, automatic/manual demo controls,
+        low-water safety alerts, pump timeout simulation,
+        history, analytics and CSV export.
+      </p>
     </div>
+
     <div className="card">
       <h3><Server size={18} /> Software Stack</h3>
-      <p>React, Vite, JavaScript, Python Flask, SQLite, CodeXml and Render cloud hosting.</p>
+      <p>
+        React, Vite, JavaScript, Python Flask, SQLite,
+        GitHub and Render Cloud Hosting.
+      </p>
     </div>
+
     <div className="card">
       <h3><Cpu size={18} /> Hardware Plan</h3>
-      <p>ESP32, soil moisture sensor, water-level sensing, relay module and water pump. Physical hardware integration is pending.</p>
+      <p>
+        ESP32, Soil Moisture Sensor, Water Level Sensor,
+        Relay Module and Water Pump.
+        Physical hardware integration is pending.
+      </p>
     </div>
+
     <div className="card">
       <h3><Info size={18} /> Project Details</h3>
-      <p><strong>Project:</strong> AgroSmart — Smart Irrigation System</p>
+
+      <p><strong>Project Name:</strong> IoT Based Smart Irrigation System</p>
+
       <p><strong>Type:</strong> Diploma ICT Minor Project</p>
+
+      <p><strong>College:</strong> Government Polytechnic Gandhinagar</p>
+
+      <p><strong>Department:</strong> Information & Communication Technology (ICT)</p>
+
+      <p><strong>Project Team:</strong></p>
+      <p>1. Pal Patel</p>
+      <p>2. Tushar Sagar</p>
+      <p>3. Heliba Jadeja</p>
+
       <p><strong>Dashboard Development:</strong> Heliba Jadeja</p>
-      <p><strong>Project Team:</strong> Group project (team names can be added here)</p>
-      <p><strong>Current Status:</strong> Online software demo; real ESP32 integration pending</p>
+
+      <p>
+        <strong>Current Status:</strong> Online Software Demo;
+        Real ESP32 Integration Pending
+      </p>
     </div>
   </div>
 </section>
+
 
         <footer>
           
